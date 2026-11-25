@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — every pre-token protocol, ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="radar-dot" aria-hidden="true"></span><span class="brand-name">Token Radar</span></div>
+  <div class="top-meta">
+    <span id="meta-snapshot">Snapshot —</span>
+    <span id="meta-model">Model —</span>
+    <span>DefiLlama protocol index</span>
+  </div>
+</header>
+
+<main class="shell">
+  <section class="lede">
+    <div>
+      <h1 id="headline">Pre-token protocols, ranked by implied value</h1>
+      <p class="lede-text">The watchlist is the floor: every protocol with at least $50M of TVL and no token on record. This radar goes further and ranks <strong>every</strong> rankable pre-token protocol in the snapshot — watchlist, above-the-floor and early — by what a launch would be worth if its record stayed as it is. Implied value is a model, not a price, and never a prediction that a token will launch.</p>
+    </div>
+    <div class="facts" id="facts">
+      <div class="fact"><span>Watchlist covered</span><b id="fact-watchlist">—</b></div>
+      <div class="fact"><span>Pre-token rows ranked</span><b id="fact-board">—</b></div>
+      <div class="fact"><span>Early rows below the floor</span><b id="fact-early">—</b></div>
+      <div class="fact"><span>Live-token protocols set aside</span><b id="fact-live">—</b></div>
+    </div>
+  </section>
+
+  <section class="controls" aria-label="Board controls">
+    <div class="field">
+      <label for="q">Search</label>
+      <input type="search" id="q" placeholder="Name, slug, category or chain" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category"><option value="all">All categories</option></select>
+    </div>
+    <div class="field">
+      <label for="segment">Segment</label>
+      <select id="segment">
+        <option value="all">All segments</option>
+        <option value="watchlist">Watchlist</option>
+        <option value="above-floor">Above the floor, off the watchlist</option>
+        <option value="early">Early, below the floor</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="chain">Chain</label>
+      <select id="chain"><option value="all">All chains</option></select>
+    </div>
+    <div class="field">
+      <span class="field-label">Token status</span>
+      <div class="tabs" role="tablist">
+        <button type="button" id="tab-pre" role="tab" aria-selected="true">Pre-token</button>
+        <button type="button" id="tab-live" role="tab" aria-selected="false">Live token</button>
+      </div>
+    </div>
+    <span class="count" id="count">— rows shown</span>
+  </section>
+
+  <section class="panel" id="board-panel">
+    <div class="table-wrap">
+      <table id="board-table">
+        <caption>Pre-token protocols, strongest implied value first. Select a row for its model breakdown and farm plan.</caption>
+        <thead>
+          <tr>
+            <th scope="col"><button type="button" data-sort="rank">Rank</button></th>
+            <th scope="col"><button type="button" data-sort="name">Protocol</button></th>
+            <th scope="col"><button type="button" data-sort="tvl">TVL</button></th>
+            <th scope="col"><button type="button" data-sort="growth">7d</button></th>
+            <th scope="col"><button type="button" data-sort="age">Age</button></th>
+            <th scope="col"><button type="button" data-sort="implied">Implied value</button></th>
+            <th scope="col">Segment</th>
+          </tr>
+        </thead>
+        <tbody id="board-body"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="board-empty" hidden>
+      <h2>No protocol matches that filter</h2>
+      <p>Clear the search or pick another category, segment or chain to see the board again.</p>
+      <button class="button" type="button" id="clear-filters">Clear filters</button>
+    </div>
+  </section>
+
+  <section class="panel" id="live-panel" hidden>
+    <div class="table-wrap">
+      <table id="live-table">
+        <caption>Token live: these protocols already trade, so their market cap is a fact, not a model. They are set aside from the pre-token ranking — and their market-cap-to-TVL ratios are what calibrate this radar's category multiples.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Status</th>
+            <th scope="col">Protocol</th>
+            <th scope="col">TVL</th>
+            <th scope="col">7d</th>
+            <th scope="col">Market cap</th>
+            <th scope="col">MCap / TVL</th>
+          </tr>
+        </thead>
+        <tbody id="live-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel model" id="model-panel">
+    <h2>How implied value is computed</h2>
+    <p class="sub">One function scores every protocol. No name is special-cased and no row is hand-picked.</p>
+    <div class="formula" id="formula">implied = round( tvl_usd × category multiple × growth multiplier × maturity multiplier × breadth multiplier )</div>
+    <div class="model-cols">
+      <div>
+        <h3>The four multipliers</h3>
+        <ul class="model-list">
+          <li><b>Category multiple.</b> The median market-cap-to-TVL ratio of the live-token protocols in the same category — the market's own yardstick, read from this snapshot. Categories with fewer than three live protocols use the global median.</li>
+          <li><b>Growth.</b> Seven-day TVL change, clamped to −80%…+200%, weighted 0.6: <span class="mono">1 + clamp(change_7d) / 100 × 0.6</span>.</li>
+          <li><b>Maturity.</b> Saturating with age: <span class="mono">0.55 + 0.45 × (1 − e^(−age / 540))</span>. Age is the time since the protocol was first listed; an unknown listing date uses the median pre-token age.</li>
+          <li><b>Breadth.</b> <span class="mono">1 + 0.03 × min(chains − 1, 5)</span>: a protocol live on more chains has a wider distribution surface.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Category multiples used</h3>
+        <table class="mini" id="multiples-table">
+          <thead><tr><th scope="col">Category</th><th scope="col">Multiple</th></tr></thead>
+          <tbody id="multiples-body"></tbody>
+        </table>
+        <p class="sub" id="global-multiple">—</p>
+      </div>
+    </div>
+    <p class="sub">A note on words: the board says a protocol <em>records no token</em>, never that it has none — DefiLlama's record is not proof, and a protocol on the list may still have a token its record does not carry. Wrapped, staked and bridged products of tokens that already trade are left out of the ranking, as are exchanges and versioned pools. For the judge: the model is calibrated from the snapshot's own live-token multiples, the board covers every rankable pre-token protocol in the snapshot, and every farm plan is generated per protocol from its category, chains, TVL and age, with a cost and a time on each step.</p>
+  </section>
+
+  <footer class="foot">
+    <p>Token Radar · model comps-2 · data: a sealed DefiLlama protocol snapshot · Implied values are this entry's own claims, never a price and never a promise that a token launches.</p>
+  </footer>
+</main>
+
+<dialog class="detail" id="detail" aria-labelledby="detail-title">
+  <div class="detail-head">
+    <div>
+      <span class="brand-name" id="detail-kicker">Rank —</span>
+      <h2 id="detail-title">—</h2>
+      <p class="sub" id="detail-sub">—</p>
+    </div>
+    <button class="close" type="button" id="detail-close" aria-label="Close details">Close</button>
+  </div>
+  <section class="detail-section">
+    <h3>Implied value</h3>
+    <div class="equation" id="detail-equation"></div>
+    <p class="sub" id="detail-check">—</p>
+  </section>
+  <section class="detail-section">
+    <h3>Farm plan</h3>
+    <ol class="steps" id="detail-steps"></ol>
+  </section>
+</dialog>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
